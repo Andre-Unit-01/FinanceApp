@@ -1,0 +1,626 @@
+LEDGERLY BUSINESS FINANCE PROJECT SUMMARY
+===============================
+
+Generated: 2026-09-08
+Project location: C:\Users\andre\Downloads\FinanceApp
+
+1. PROJECT OVERVIEW
+-------------------
+
+Ledgerly Business Finance is a full-stack business finance application.
+
+It allows users to:
+
+- Register and log in securely.
+- Record income and expense transactions.
+- Edit and delete transactions.
+- Organize transactions with categories.
+- Create monthly category budgets.
+- Set monthly income and savings targets.
+- Compare planned budgets with actual transaction spending.
+- View monthly dashboard analytics.
+- Track budget progress and identify over-budget categories.
+- See upcoming bills and calculate available spending money.
+- Filter, sort, and paginate transaction records.
+
+The application is designed as a desktop-focused financial dashboard with an ANB-inspired teal banking theme, white panels, structured tables, summary cards, progress bars, and status badges.
+
+2. TECHNOLOGIES AND LANGUAGES
+-----------------------------
+
+Programming languages and formats used:
+
+- JavaScript: Main programming language for the React client and Node.js server.
+- JSX: JavaScript syntax used to describe React user interfaces.
+- CSS: Styling, layout, colors, responsive rules, tables, forms, and visual states.
+- SQL: Used indirectly through Prisma migrations for PostgreSQL database changes.
+- Prisma Schema Language: Used in server/prisma/schema.prisma to describe database models.
+- JSON: Used for package configuration, API request bodies, API responses, and environment-style configuration.
+- Markdown: Used by README.md, ARCHITECTURE.md, and CODE_GUIDE.md documentation files.
+
+Frontend technologies:
+
+- React 19: Builds the user interface from components.
+- React DOM: Mounts React into the browser document.
+- React Router: Handles client-side page routes.
+- Vite: Development server and production build tool.
+- ESLint: Checks JavaScript and JSX for common problems.
+
+Backend technologies:
+
+- Node.js: Runs the backend JavaScript code.
+- Express: Creates the REST API and handles HTTP requests.
+- Prisma ORM: Provides JavaScript database access for PostgreSQL.
+- PostgreSQL: Stores users, categories, transactions, budgets, and monthly budget targets.
+- bcryptjs: Hashes passwords and compares login passwords to saved hashes.
+- JSON Web Token (JWT): Represents an authenticated login session.
+- Helmet: Adds common HTTP security headers.
+- CORS: Controls which frontend origin can call the API.
+- dotenv: Loads environment variables from server/.env.
+
+Testing technologies:
+
+- Vitest: Runs backend tests.
+- Supertest: Sends HTTP requests to the Express application during tests.
+- ESLint: Performs static code checks.
+
+3. APPLICATION ARCHITECTURE
+---------------------------
+
+The project uses a layered architecture:
+
+    React UI
+        |
+        v
+    Client service
+        |
+        v
+    Client repository / HTTP access
+        |
+        v
+    Express REST API
+        |
+        v
+    Controller
+        |
+        v
+    Server service
+        |
+        v
+    Server repository
+        |
+        v
+    Prisma ORM
+        |
+        v
+    PostgreSQL database
+
+Responsibilities:
+
+UI:
+- Displays forms, tables, dashboards, buttons, loading states, and errors.
+- Collects user input.
+- Stores temporary screen state.
+- Calls client services when a user performs an action.
+
+Services:
+- Contain business rules and calculations.
+- Validate data.
+- Check ownership and permissions.
+- Coordinate repositories.
+- Calculate financial values such as income, expenses, remaining money, and budget status.
+
+Repositories:
+- Handle data access.
+- The client HTTP repository sends requests to the API.
+- Server repositories contain Prisma queries.
+- Repositories should not decide what the user is allowed to do or how the UI looks.
+
+Controllers:
+- Translate HTTP requests into service calls.
+- Send service results as HTTP responses.
+- Pass errors to the central error handler.
+
+Routes:
+- Connect URL paths and HTTP methods to controllers.
+- Apply authentication middleware to protected endpoints.
+
+Database:
+- Permanently stores application data in PostgreSQL.
+- Prisma schema and migrations describe the database structure.
+
+4. HOW A REQUEST WORKS
+----------------------
+
+Example: creating a transaction.
+
+1. The user fills out the transaction form in the React UI.
+2. TransactionsPage.handleSubmit collects amount, type, category, description, and date.
+3. The client apiService is called.
+4. httpRepository sends a POST request to /api/transactions.
+5. Express matches the request to transactionRoutes.js.
+6. authMiddleware verifies the JWT and identifies the current user.
+7. transactionController.create receives the HTTP request.
+8. transactionService.createTransaction validates the data and checks category ownership.
+9. transactionRepository.createTransaction sends the database operation to Prisma.
+10. PostgreSQL stores the transaction.
+11. The saved row travels back through the repository, service, and controller.
+12. The browser receives the response.
+13. The React page reloads the list and displays the new transaction row.
+
+The UI does not directly query PostgreSQL. The service decides what should happen, and the repository decides how data is stored.
+
+5. MAIN PROJECT STRUCTURE
+-------------------------
+
+Root files:
+
+- package.json: Runs the frontend and backend together with concurrently.
+- README.md: Basic project overview, setup instructions, environment variables, and commands.
+- ARCHITECTURE.md: Explains the layered architecture in beginner-friendly language.
+- CODE_GUIDE.md: Explains how to read the source code and follow a feature.
+- PROJECT_SUMMARY.txt: This project summary.
+- ANB.jpg: Visual reference used by the authentication screen theme.
+
+Client:
+
+- client/src/main.jsx: Browser entry point that renders the React application.
+- client/src/App.jsx: Routes and current page-level React components.
+- client/src/App.css: Application layout and component styling.
+- client/src/index.css: Global typography, root sizing, base styles, and theme fallbacks.
+- client/src/services/apiService.js: Service-level API request function used by UI pages.
+- client/src/services/budgetService.js: Suggested budget recommendation rules.
+- client/src/repositories/httpRepository.js: Browser HTTP request and error handling.
+- client/src/utils/formatting.js: Shared currency formatting.
+- client/vite.config.js: Vite configuration.
+- client/eslint.config.js: Client ESLint configuration.
+- client/public/: Static public assets.
+- client/src/assets/: Client assets.
+
+Server:
+
+- server/src/app.js: Express middleware, health endpoint, route mounting, and error middleware.
+- server/src/server.js: Starts the HTTP server and disconnects Prisma on shutdown.
+- server/src/lib/prisma.js: Shared PrismaClient instance.
+- server/src/routes/: URL and HTTP method definitions.
+- server/src/controllers/: HTTP adapters that call services.
+- server/src/services/: Business rules, validation, calculations, and application workflows.
+- server/src/repositories/: Prisma database access functions.
+- server/src/middleware/authMiddleware.js: JWT verification and current-user lookup.
+- server/src/middleware/errorHandler.js: Consistent API error responses.
+- server/src/utils/AppError.js: Application error class with status, code, message, and optional field details.
+- server/prisma/schema.prisma: Database model definitions.
+- server/prisma/migrations/: Versioned PostgreSQL schema changes.
+- server/prisma/seed.js: Local demo data setup.
+- server/tests/: Backend integration tests.
+- server/vitest.config.js: Vitest configuration.
+- server/eslint.config.js: Server ESLint configuration.
+
+6. MAIN USER FEATURES
+---------------------
+
+Authentication:
+
+- Registration creates a user with a bcrypt password hash.
+- Login checks the email and password.
+- Successful login returns a JWT.
+- The frontend stores the JWT in localStorage.
+- Protected API requests send the token in the Authorization header.
+- Middleware verifies the token before protected routes continue.
+
+Transactions:
+
+- Create income or expense records.
+- Edit transaction amount, type, category, description, and date.
+- Delete transactions.
+- View transaction rows with date, description, category, type, amount, and actions.
+- Filter by transaction type, category, date range, and sort order.
+- Paginate results.
+- Category ownership is checked before a transaction uses a category.
+
+Categories:
+
+- Create income or expense categories.
+- Edit category names and types.
+- Delete categories when they are not linked to transactions.
+- Categories belong to individual users.
+
+Budget planner:
+
+- Select a month and year using previous/next controls.
+- Set a monthly income target.
+- Set a savings target.
+- Assign category budget amounts.
+- Edit or delete category budgets.
+- Optionally suggest amounts based on recommendation percentages.
+- Compare budget amounts with actual expense transactions.
+- Display remaining budget and percentage used.
+- Show On Track, Near Limit, or Over Budget status.
+- Display assigned and unassigned money.
+- Show current balance after actual income and expenses.
+- Subtract future bills to calculate available spending.
+
+Dashboard analytics:
+
+- Display monthly income.
+- Display monthly expenses.
+- Display net balance.
+- Display total budget.
+- Display spending grouped by category.
+- Display budget status rows.
+
+7. REST API ENDPOINTS
+---------------------
+
+Health:
+
+GET /api/health
+- Returns a simple status response.
+- Does not require authentication.
+
+Authentication:
+
+POST /api/auth/register
+- Creates a user account.
+- Input includes email and password.
+
+POST /api/auth/login
+- Checks credentials and returns a JWT and user information.
+
+POST /api/auth/logout
+- Returns a logout confirmation.
+- The browser removes the stored token.
+
+GET /api/auth/me
+- Returns the current authenticated user.
+- Requires a valid JWT.
+
+Transactions:
+
+GET /api/transactions
+- Lists the authenticated user's transactions.
+- Supports pagination, filtering, date ranges, category, type, sorting, and sort direction.
+
+GET /api/transactions/:id
+- Retrieves one transaction owned by the current user.
+
+POST /api/transactions
+- Creates a transaction.
+
+PATCH /api/transactions/:id
+- Updates a transaction owned by the current user.
+
+DELETE /api/transactions/:id
+- Deletes a transaction owned by the current user.
+
+Categories:
+
+GET /api/categories
+- Lists the current user's categories.
+
+POST /api/categories
+- Creates a category.
+
+PATCH /api/categories/:id
+- Updates a category owned by the current user.
+
+DELETE /api/categories/:id
+- Deletes a category when it has no linked transactions.
+
+Budgets:
+
+GET /api/budgets
+- Lists category budget rows.
+
+POST /api/budgets
+- Creates a category budget for a month and year.
+
+PATCH /api/budgets/:id
+- Updates a category budget.
+
+DELETE /api/budgets/:id
+- Deletes a category budget.
+
+GET /api/budgets/planner?year=YYYY&month=MM
+- Returns the monthly planner view model.
+- Includes targets, actual income, expenses, category spending, statuses, unassigned money, and upcoming bills.
+
+PUT /api/budgets/monthly
+- Saves monthly income and savings targets.
+
+Analytics:
+
+GET /api/analytics/monthly?year=YYYY&month=MM
+- Returns monthly income, expenses, net balance, spending by category, and budget status.
+
+All endpoints except health and registration/login require authentication where indicated by the route configuration.
+
+8. DATABASE MODELS
+------------------
+
+User:
+
+- id: Unique user identifier.
+- email: Unique login email.
+- passwordHash: Bcrypt password hash.
+- createdAt and updatedAt: Record timestamps.
+- Relationships to categories, transactions, budgets, and monthly budgets.
+
+Category:
+
+- id: Unique category identifier.
+- userId: Owner of the category.
+- name: Category name.
+- type: INCOME or EXPENSE.
+- Relationships to transactions and budgets.
+- User/category name is unique.
+
+Transaction:
+
+- id: Unique transaction identifier.
+- userId: Owner of the transaction.
+- categoryId: Related category.
+- amount: Decimal financial amount.
+- type: INCOME or EXPENSE.
+- description: Human-readable explanation.
+- transactionDate: Date the transaction occurred.
+- User and category relationships.
+
+Budget:
+
+- id: Unique budget identifier.
+- userId: Owner.
+- categoryId: Planned spending category.
+- month and year: Budget period.
+- amount: Planned amount.
+- One category budget is allowed per user/category/month/year combination.
+
+MonthlyBudget:
+
+- id: Unique monthly target identifier.
+- userId: Owner.
+- month and year: Target period.
+- incomeTarget: Planned monthly income.
+- savingsTarget: Planned monthly savings.
+- One monthly target row is allowed per user/month/year combination.
+
+TransactionType:
+
+- INCOME
+- EXPENSE
+
+Important design decision:
+
+Budgets do not store a duplicated spent amount. Actual spending is calculated from transactions. This means creating, editing, or deleting a transaction automatically changes budget tracking the next time the planner loads.
+
+9. FINANCIAL CALCULATIONS
+-------------------------
+
+Monthly income:
+
+    totalIncome = sum of transactions where type is INCOME
+
+Monthly expenses:
+
+    totalExpenses = sum of transactions where type is EXPENSE
+
+Current balance:
+
+    currentBalance = totalIncome - totalExpenses
+
+Remaining money:
+
+    remaining = totalIncome - totalExpenses - savingsTarget
+
+Assigned money:
+
+    totalAssigned = category budget amounts + savings target
+
+Unassigned money:
+
+    unassigned = income target - totalAssigned
+
+Available spending:
+
+    availableToSpend = current balance - upcoming bills
+
+Budget remaining:
+
+    remaining category budget = planned category budget - actual category spending
+
+Budget percentage:
+
+    percentageUsed = actual spending / planned budget * 100
+
+Budget statuses:
+
+- 0 through 79 percent: On Track.
+- 80 through 99 percent: Near Limit.
+- 100 percent or greater: Over Budget.
+
+The progress bar is visually limited to 100 percent, but the text can still show a value above 100 percent so overspending is not hidden.
+
+Monthly ranges use UTC calendar boundaries. This keeps a transaction on the first day of a month in the correct month even when server and database time zones differ.
+
+10. SECURITY AND VALIDATION
+---------------------------
+
+- Passwords are hashed with bcryptjs instead of being stored as plain text.
+- JWT tokens are verified by authentication middleware.
+- Protected records include user ownership checks.
+- Categories must belong to the current user before they are attached to transactions or budgets.
+- Amounts must be greater than zero for transaction and category-budget creation.
+- Email format is validated during authentication.
+- Passwords must meet the minimum length rule.
+- Transaction type must be INCOME or EXPENSE.
+- Category type must be INCOME or EXPENSE.
+- Express error middleware returns friendly API errors without exposing unexpected implementation details.
+- Helmet adds common HTTP security headers.
+- CORS uses the configured client origin.
+
+11. DESIGN PATTERNS AND PRINCIPLES
+----------------------------------
+
+Layered Architecture:
+
+The most important pattern is layered architecture. Each layer has a focused job and calls the next layer instead of bypassing it.
+
+Repository Pattern:
+
+Repositories hide database and HTTP storage details. Services ask repositories for data without needing to know the exact Prisma query or fetch setup.
+
+Service Layer Pattern:
+
+Services contain application rules such as validation, ownership checks, calculations, and coordination of multiple repositories.
+
+Controller Pattern:
+
+Controllers adapt HTTP requests and responses to service functions. They remain intentionally thin.
+
+Middleware Pattern:
+
+Express middleware runs during the request pipeline. Authentication middleware verifies tokens before protected controllers run. Error middleware handles failures consistently.
+
+Component-Based UI:
+
+React pages and reusable components such as SummaryCard and Panel split the interface into smaller pieces.
+
+Single Responsibility Principle:
+
+The project attempts to keep UI, services, repositories, controllers, and database access focused on different responsibilities.
+
+REST-style API:
+
+The backend uses HTTP verbs and resource URLs:
+
+- GET reads data.
+- POST creates data.
+- PATCH updates part of an existing record.
+- DELETE removes data.
+
+12. COMMANDS
+------------
+
+Start frontend and backend together from the project root:
+
+    npm run dev
+
+Start backend only:
+
+    npm run backend
+
+Start frontend only:
+
+    npm run frontend
+
+Build frontend:
+
+    npm --prefix client run build
+
+Lint frontend:
+
+    npm --prefix client run lint
+
+Lint backend:
+
+    npm --prefix server run lint
+
+Run backend tests serially:
+
+    Set-Location server
+    npx vitest run --no-file-parallelism
+
+The serial test flag is useful because the existing integration tests use the same database and clean up shared records. Running test files in parallel can cause them to interfere with one another.
+
+Generate Prisma client:
+
+    Set-Location server
+    npx prisma generate
+
+Apply existing migrations:
+
+    Set-Location server
+    npx prisma migrate deploy
+
+Seed local demo data:
+
+    Set-Location server
+    npm run prisma:seed
+
+13. LOCAL DEVELOPMENT SETUP
+---------------------------
+
+1. Install Node.js and PostgreSQL.
+2. Install project dependencies in the client and server folders if needed.
+3. Create server/.env from the example configuration.
+4. Set DATABASE_URL to the local PostgreSQL database.
+5. Set JWT_SECRET to a development secret.
+6. Set CLIENT_URL to http://localhost:5173.
+7. Set PORT to 5000.
+8. Run Prisma migrations.
+9. Run the seed script if demo data is needed.
+10. Run npm run dev from the project root.
+11. Open http://localhost:5173/.
+
+Demo credentials created by the seed script:
+
+- Email: demo@example.com
+- Password: secret123
+
+Do not use demo credentials or development secrets in production.
+
+14. TESTING COVERAGE
+--------------------
+
+The existing backend tests cover:
+
+- User registration.
+- Duplicate email rejection.
+- Successful login.
+- Invalid password rejection.
+- Protected route rejection without a token.
+- Transaction creation.
+- Transaction listing.
+- Pagination metadata.
+- Type and category filtering.
+- Sorting by amount.
+- Monthly analytics.
+- Budget status response.
+- Cross-user transaction authorization.
+
+The client has a production build and lint command. The backend has integration tests using Vitest and Supertest.
+
+Current known validation note:
+
+- The client build passes.
+- Backend tests pass when run with --no-file-parallelism.
+- Client lint reports existing React hook effect warnings/errors in App.jsx. Those are unrelated to this summary and were not changed.
+
+15. FUTURE IMPROVEMENTS
+-----------------------
+
+The README lists these possible future features:
+
+- CSV import and export.
+- Recurring transactions.
+- Richer charts and reports.
+- Account linking and historical snapshots.
+
+Other useful improvements could include:
+
+- Moving the large page components from App.jsx into separate page files.
+- Adding focused unit tests for pure budget calculations.
+- Adding client-side tests for forms and navigation.
+- Isolating each integration test with a separate database or transaction.
+- Adding a production deployment configuration.
+- Adding stronger environment validation at startup.
+- Adding audit logging for important financial changes.
+
+16. SHORT SUMMARY
+-----------------
+
+Ledgerly Business Finance is a React and Node.js business finance dashboard backed by PostgreSQL. React provides the user interface, Express provides the REST API, Prisma connects the server to PostgreSQL, and JWT plus bcryptjs handle authentication.
+
+The application supports authentication, transactions, categories, monthly budgets, analytics, budget progress, upcoming bills, pagination, filtering, sorting, and ownership protection.
+
+Its main design pattern is layered architecture with services and repositories. The code separates display logic, business rules, data access, and persistent storage so the project can be understood and extended one layer at a time.

@@ -1,0 +1,15 @@
+# Local dependencies and build output
+node_modules/
+dist/
+coverage/
+
+# Local environment and secret configuration
+.env
+.env.*
+!.env.example
+
+# Logs and local tooling files
+*.log
+.vscode/
+.idea/
+.DS_Store

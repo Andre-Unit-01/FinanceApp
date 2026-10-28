@@ -1,0 +1,13 @@
+{
+  "name": "finance-tracker",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently -k \"npm --prefix server run dev\" \"npm --prefix client run dev -- --host 0.0.0.0\"",
+    "backend": "npm --prefix server run dev",
+    "frontend": "npm --prefix client run dev -- --host 0.0.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}
